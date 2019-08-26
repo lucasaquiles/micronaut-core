@@ -19,10 +19,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import io.micronaut.context.annotation.AliasFor;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * Annotation that can be applied to method to signify the method receives a {@link io.micronaut.http.HttpMethod#HEAD}.
@@ -34,6 +31,7 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 @Target({ElementType.METHOD})
 @HttpMethodMapping
+@Repeatable(HeadMappings.class)
 public @interface Head {
 
     /**
@@ -41,6 +39,7 @@ public @interface Head {
      */
     @AliasFor(annotation = HttpMethodMapping.class, member = "value")
     @AliasFor(annotation = UriMapping.class, member = "value")
+    @AliasFor(member = "uri")
     String value() default UriMapping.DEFAULT_URI;
 
     /**
@@ -48,5 +47,6 @@ public @interface Head {
      */
     @AliasFor(annotation = HttpMethodMapping.class, member = "value")
     @AliasFor(annotation = UriMapping.class, member = "value")
+    @AliasFor(member = "value")
     String uri() default UriMapping.DEFAULT_URI;
 }

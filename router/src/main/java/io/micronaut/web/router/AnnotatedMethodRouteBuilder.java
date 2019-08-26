@@ -18,6 +18,7 @@ package io.micronaut.web.router;
 import io.micronaut.context.ExecutionHandleLocator;
 import io.micronaut.context.processor.ExecutableMethodProcessor;
 import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.convert.ConversionService;
 import io.micronaut.core.reflect.ClassLoadingReporter;
 import io.micronaut.core.util.ArrayUtils;
@@ -32,10 +33,7 @@ import io.micronaut.inject.ExecutableMethod;
 
 import javax.inject.Singleton;
 import java.lang.annotation.Annotation;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BiConsumer;
 
 /**
@@ -59,18 +57,10 @@ public class AnnotatedMethodRouteBuilder extends DefaultRouteBuilder implements 
     public AnnotatedMethodRouteBuilder(ExecutionHandleLocator executionHandleLocator, UriNamingStrategy uriNamingStrategy, ConversionService<?> conversionService) {
         super(executionHandleLocator, uriNamingStrategy, conversionService);
         httpMethodsHandlers.put(Get.class, (BeanDefinition bean, ExecutableMethod method) -> {
-            String uri = method.stringValue(HttpMethodMapping.class).orElse(UriMapping.DEFAULT_URI);
-            MediaType[] produces = resolveProduces(method);
-            Route route = GET(resolveUri(bean, uri,
-                method,
-                uriNamingStrategy),
-                bean,
-                method).produces(produces);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Created Route: {}", route);
-            }
-            if (method.booleanValue(Get.class, "headRoute").orElse(true)) {
-                route = HEAD(resolveUri(bean, uri,
+            method.getAnnotationValuesByType(Get.class).forEach(annotation -> {
+                String uri = annotation.stringValue().orElse(UriMapping.DEFAULT_URI);
+                MediaType[] produces = resolveProduces(method, annotation);
+                Route route = GET(resolveUri(bean, uri,
                         method,
                         uriNamingStrategy),
                         bean,
@@ -78,114 +68,140 @@ public class AnnotatedMethodRouteBuilder extends DefaultRouteBuilder implements 
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("Created Route: {}", route);
                 }
-            }
+                if (annotation.booleanValue("headRoute").orElse(true)) {
+                    route = HEAD(resolveUri(bean, uri,
+                            method,
+                            uriNamingStrategy),
+                            bean,
+                            method).produces(produces);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Created Route: {}", route);
+                    }
+                }
+            });
         });
 
         httpMethodsHandlers.put(Post.class, (BeanDefinition bean, ExecutableMethod method) -> {
-            String uri = method.stringValue(HttpMethodMapping.class).orElse(UriMapping.DEFAULT_URI);
-            MediaType[] consumes = resolveConsumes(method);
-            MediaType[] produces = resolveProduces(method);
-            Route route = POST(resolveUri(bean, uri,
-                method,
-                uriNamingStrategy),
-                bean,
-                method);
-            route = route.consumes(consumes).produces(produces);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Created Route: {}", route);
-            }
+            method.getAnnotationValuesByType(Post.class).forEach(annotation -> {
+                String uri = annotation.stringValue().orElse(UriMapping.DEFAULT_URI);
+                MediaType[] consumes = resolveConsumes(method, annotation);
+                MediaType[] produces = resolveProduces(method, annotation);
+                Route route = POST(resolveUri(bean, uri,
+                        method,
+                        uriNamingStrategy),
+                        bean,
+                        method);
+                route = route.consumes(consumes).produces(produces);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Created Route: {}", route);
+                }
+            });
+
         });
 
         httpMethodsHandlers.put(Put.class, (BeanDefinition bean, ExecutableMethod method) -> {
-            String uri = method.stringValue(HttpMethodMapping.class).orElse(UriMapping.DEFAULT_URI);
-            MediaType[] consumes = resolveConsumes(method);
-            MediaType[] produces = resolveProduces(method);
-            Route route = PUT(resolveUri(bean, uri,
-                method,
-                uriNamingStrategy),
-                bean,
-                method);
-            route = route.consumes(consumes).produces(produces);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Created Route: {}", route);
-            }
+            method.getAnnotationValuesByType(Put.class).forEach(annotation -> {
+                String uri = annotation.stringValue().orElse(UriMapping.DEFAULT_URI);
+                MediaType[] consumes = resolveConsumes(method, annotation);
+                MediaType[] produces = resolveProduces(method, annotation);
+                Route route = PUT(resolveUri(bean, uri,
+                        method,
+                        uriNamingStrategy),
+                        bean,
+                        method);
+                route = route.consumes(consumes).produces(produces);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Created Route: {}", route);
+                }
+            });
         });
 
         httpMethodsHandlers.put(Patch.class, (BeanDefinition bean, ExecutableMethod method) -> {
-            String uri = method.stringValue(HttpMethodMapping.class).orElse(UriMapping.DEFAULT_URI);
-            MediaType[] consumes = resolveConsumes(method);
-            MediaType[] produces = resolveProduces(method);
-            Route route = PATCH(resolveUri(bean, uri,
-                method,
-                uriNamingStrategy),
-                bean,
-                method);
-            route = route.consumes(consumes).produces(produces);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Created Route: {}", route);
-            }
+            method.getAnnotationValuesByType(Patch.class).forEach(annotation -> {
+                String uri = annotation.stringValue().orElse(UriMapping.DEFAULT_URI);
+                MediaType[] consumes = resolveConsumes(method, annotation);
+                MediaType[] produces = resolveProduces(method, annotation);
+                Route route = PATCH(resolveUri(bean, uri,
+                        method,
+                        uriNamingStrategy),
+                        bean,
+                        method);
+                route = route.consumes(consumes).produces(produces);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Created Route: {}", route);
+                }
+            });
         });
 
         httpMethodsHandlers.put(Delete.class, (BeanDefinition bean, ExecutableMethod method) -> {
-            String uri = method.stringValue(HttpMethodMapping.class).orElse(UriMapping.DEFAULT_URI);
-            MediaType[] consumes = resolveConsumes(method);
-            MediaType[] produces = resolveProduces(method);
-            Route route = DELETE(resolveUri(bean, uri,
-                method,
-                uriNamingStrategy),
-                bean,
-                method);
-            route = route.consumes(consumes).produces(produces);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Created Route: {}", route);
-            }
+            method.getAnnotationValuesByType(Delete.class).forEach(annotation -> {
+                String uri = annotation.stringValue().orElse(UriMapping.DEFAULT_URI);
+                MediaType[] consumes = resolveConsumes(method, annotation);
+                MediaType[] produces = resolveProduces(method, annotation);
+                Route route = DELETE(resolveUri(bean, uri,
+                        method,
+                        uriNamingStrategy),
+                        bean,
+                        method);
+                route = route.consumes(consumes).produces(produces);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Created Route: {}", route);
+                }
+            });
         });
 
 
         httpMethodsHandlers.put(Head.class, (BeanDefinition bean, ExecutableMethod method) -> {
-            String uri = method.stringValue(HttpMethodMapping.class).orElse(UriMapping.DEFAULT_URI);
-            Route route = HEAD(resolveUri(bean, uri,
-                method,
-                uriNamingStrategy),
-                bean,
-                method);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Created Route: {}", route);
-            }
+            method.getAnnotationValuesByType(Head.class).forEach(annotation -> {
+                String uri = annotation.stringValue().orElse(UriMapping.DEFAULT_URI);
+                Route route = HEAD(resolveUri(bean, uri,
+                        method,
+                        uriNamingStrategy),
+                        bean,
+                        method);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Created Route: {}", route);
+                }
+            });
         });
 
         httpMethodsHandlers.put(Options.class, (BeanDefinition bean, ExecutableMethod method) -> {
-            String uri = method.stringValue(HttpMethodMapping.class).orElse(UriMapping.DEFAULT_URI);
-            MediaType[] consumes = resolveConsumes(method);
-            MediaType[] produces = resolveProduces(method);
-            Route route = OPTIONS(resolveUri(bean, uri,
-                method,
-                uriNamingStrategy),
-                bean,
-                method);
-            route = route.consumes(consumes).produces(produces);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Created Route: {}", route);
-            }
+            method.getAnnotationValuesByType(Options.class).forEach(annotation -> {
+                String uri = annotation.stringValue().orElse(UriMapping.DEFAULT_URI);
+                MediaType[] consumes = resolveConsumes(method, annotation);
+                MediaType[] produces = resolveProduces(method, annotation);
+                Route route = OPTIONS(resolveUri(bean, uri,
+                        method,
+                        uriNamingStrategy),
+                        bean,
+                        method);
+                route = route.consumes(consumes).produces(produces);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Created Route: {}", route);
+                }
+            });
         });
 
         httpMethodsHandlers.put(Trace.class, (BeanDefinition bean, ExecutableMethod method) -> {
-            String uri = method.stringValue(HttpMethodMapping.class).orElse(UriMapping.DEFAULT_URI);
-            Route route = TRACE(resolveUri(bean, uri,
-                method,
-                uriNamingStrategy),
-                bean,
-                method);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Created Route: {}", route);
-            }
+            method.getAnnotationValuesByType(Trace.class).forEach(annotation -> {
+                String uri = annotation.stringValue().orElse(UriMapping.DEFAULT_URI);
+                Route route = TRACE(resolveUri(bean, uri,
+                        method,
+                        uriNamingStrategy),
+                        bean,
+                        method);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Created Route: {}", route);
+                }
+            });
         });
 
         httpMethodsHandlers.put(Error.class, (BeanDefinition bean, ExecutableMethod method) -> {
-                boolean isGlobal = method.isTrue(Error.class, "global");
+            method.getAnnotationValuesByType(Error.class).forEach(annotation -> {
+                boolean isGlobal = annotation.isTrue("global");
                 Class declaringType = bean.getBeanType();
-                if (method.isPresent(Error.class, "status")) {
-                    Optional<HttpStatus> value = method.enumValue(Error.class, "status", HttpStatus.class);
+                if (annotation.isPresent("status")) {
+                    Optional<HttpStatus> value = annotation.enumValue("status", HttpStatus.class);
                     value.ifPresent(httpStatus -> {
                         if (isGlobal) {
                             status(httpStatus, declaringType, method.getMethodName(), method.getArgumentTypes());
@@ -195,8 +211,8 @@ public class AnnotatedMethodRouteBuilder extends DefaultRouteBuilder implements 
                     });
                 } else {
                     Class exceptionType = null;
-                    if (method.isPresent(Error.class, AnnotationMetadata.VALUE_MEMBER)) {
-                        Optional<Class> annotationValue = method.classValue(Error.class);
+                    if (annotation.isPresent(AnnotationMetadata.VALUE_MEMBER)) {
+                        Optional<Class<?>> annotationValue = annotation.classValue();
                         if (annotationValue.isPresent()) {
                             if (Throwable.class.isAssignableFrom(annotationValue.get())) {
                                 exceptionType = annotationValue.get();
@@ -218,20 +234,28 @@ public class AnnotatedMethodRouteBuilder extends DefaultRouteBuilder implements 
                         error(declaringType, exceptionType, declaringType, method.getMethodName(), method.getArgumentTypes());
                     }
                 }
-            }
-        );
+            });
+        });
     }
 
-    private MediaType[] resolveConsumes(ExecutableMethod method) {
-        MediaType[] consumes = MediaType.of(method.stringValues(Consumes.class));
+    private MediaType[] resolveConsumes(ExecutableMethod method, AnnotationValue annotationValue) {
+        String[] consumeStrings = annotationValue.stringValues("consumes");
+        if (consumeStrings.length == 0) {
+            consumeStrings = method.stringValues(Consumes.class);
+        }
+        MediaType[] consumes = MediaType.of(consumeStrings);
         if (ArrayUtils.isEmpty(consumes)) {
             consumes = DEFAULT_MEDIA_TYPES;
         }
         return consumes;
     }
 
-    private MediaType[] resolveProduces(ExecutableMethod method) {
-        MediaType[] produces = MediaType.of(method.stringValues(Produces.class));
+    private MediaType[] resolveProduces(ExecutableMethod method, AnnotationValue annotationValue) {
+        String[] produceStrings = annotationValue.stringValues("produces");
+        if (produceStrings.length == 0) {
+            produceStrings = method.stringValues(Produces.class);
+        }
+        MediaType[] produces = MediaType.of(produceStrings);
         if (ArrayUtils.isEmpty(produces)) {
             produces = DEFAULT_MEDIA_TYPES;
         }
@@ -240,20 +264,19 @@ public class AnnotatedMethodRouteBuilder extends DefaultRouteBuilder implements 
 
     @Override
     public void process(BeanDefinition<?> beanDefinition, ExecutableMethod<?, ?> method) {
-        Optional<Class<? extends Annotation>> actionAnn = method.getAnnotationTypeByStereotype(HttpMethodMapping.class);
-        actionAnn.ifPresent(annotationClass -> {
-                BiConsumer<BeanDefinition, ExecutableMethod> handler = httpMethodsHandlers.get(annotationClass);
-                if (handler != null) {
-                    ClassLoadingReporter.reportBeanPresent(method.getReturnType().getType());
-                    for (Class argumentType : method.getArgumentTypes()) {
-                        ClassLoadingReporter.reportBeanPresent(argumentType);
-                    }
-                    handler.accept(beanDefinition, method);
+        List<Class<? extends Annotation>> actionAnnotations = method.getAnnotationTypesByStereotype(HttpMethodMapping.class);
+        for (Class<? extends Annotation> annotationClass : actionAnnotations) {
+            BiConsumer<BeanDefinition, ExecutableMethod> handler = httpMethodsHandlers.get(annotationClass);
+            if (handler != null) {
+                ClassLoadingReporter.reportBeanPresent(method.getReturnType().getType());
+                for (Class argumentType : method.getArgumentTypes()) {
+                    ClassLoadingReporter.reportBeanPresent(argumentType);
                 }
+                handler.accept(beanDefinition, method);
             }
-        );
+        }
 
-        if (!actionAnn.isPresent() && method.isDeclaredAnnotationPresent(UriMapping.class)) {
+        if (actionAnnotations.isEmpty() && method.isDeclaredAnnotationPresent(UriMapping.class)) {
             String uri = method.stringValue(UriMapping.class).orElse(UriMapping.DEFAULT_URI);
             MediaType[] produces = MediaType.of(method.stringValues(Produces.class));
             Route route = GET(resolveUri(beanDefinition, uri,
@@ -266,7 +289,6 @@ public class AnnotatedMethodRouteBuilder extends DefaultRouteBuilder implements 
                 LOG.debug("Created Route: {}", route);
             }
         }
-
     }
 
     private String resolveUri(BeanDefinition bean, String value, ExecutableMethod method, UriNamingStrategy uriNamingStrategy) {

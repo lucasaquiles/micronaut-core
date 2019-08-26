@@ -26,6 +26,7 @@ import io.micronaut.http.MutableHttpRequest
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.Header
+import io.micronaut.http.annotation.Produces
 import io.micronaut.http.annotation.QueryValue
 import io.micronaut.http.client.annotation.Client
 import io.micronaut.http.client.exceptions.HttpClientResponseException
@@ -68,7 +69,6 @@ class HttpGetSpec extends Specification {
         body.get() == 'success'
 
         cleanup:
-        client.stop()
         client.close()
     }
 
@@ -510,6 +510,31 @@ class HttpGetSpec extends Specification {
         body == 'x-y'
     }
 
+    void "test multiple get mappings"() {
+        given:
+        RxHttpClient client = RxHttpClient.create(embeddedServer.getURL())
+
+        when:
+        def flowable = client.exchange(HttpRequest.GET("/get/multiple"), String)
+        HttpResponse<String> resp = flowable.blockingFirst()
+
+        then:
+        resp.body() == "OK"
+        resp.contentType.get() == MediaType.TEXT_PLAIN_TYPE
+
+        when:
+        flowable = client.exchange(HttpRequest.GET("/get/multiple/mappings"), String)
+        resp = flowable.blockingFirst()
+
+        then:
+        resp.body() == "OK"
+        resp.contentType.get() == MediaType.TEXT_XML_TYPE
+
+        cleanup:
+        client.close()
+    }
+
+
     @Controller("/get")
     static class GetController {
 
@@ -606,6 +631,13 @@ class HttpGetSpec extends Specification {
         @Get("/completable/error")
         Completable completableError() {
             return Completable.error(new RuntimeException("completable error"))
+        }
+
+        @Get(uri = "/multiple", produces = MediaType.TEXT_PLAIN)
+        @Get("/multiple/mappings")
+        @Produces(MediaType.TEXT_XML)
+        String multipleMappings() {
+            "OK"
         }
     }
 

@@ -20,10 +20,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import io.micronaut.context.annotation.AliasFor;
 import io.micronaut.core.async.annotation.SingleResult;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * Annotation that can be applied to method to signify the method receives a {@link io.micronaut.http.HttpMethod#POST}.
@@ -35,6 +32,7 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 @Target({ElementType.METHOD})
 @HttpMethodMapping
+@Repeatable(PostMappings.class)
 public @interface Post {
 
     /**
@@ -42,6 +40,7 @@ public @interface Post {
      */
     @AliasFor(annotation = HttpMethodMapping.class, member = "value")
     @AliasFor(annotation = UriMapping.class, member = "value")
+    @AliasFor(member = "uri")
     String value() default UriMapping.DEFAULT_URI;
 
     /**
@@ -49,6 +48,7 @@ public @interface Post {
      */
     @AliasFor(annotation = HttpMethodMapping.class, member = "value")
     @AliasFor(annotation = UriMapping.class, member = "value")
+    @AliasFor(member = "value")
     String uri() default UriMapping.DEFAULT_URI;
 
     /**
@@ -70,6 +70,8 @@ public @interface Post {
      */
     @AliasFor(annotation = Produces.class, member = "value")
     @AliasFor(annotation = Consumes.class, member = "value")
+    @AliasFor(member = "consumes")
+    @AliasFor(member = "produces")
     String[] processes() default {};
 
     /**

@@ -20,10 +20,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import io.micronaut.context.annotation.AliasFor;
 import io.micronaut.http.HttpStatus;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * Annotation that can be applied to method to map it to an error route.
@@ -35,6 +32,7 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 @Target({ElementType.METHOD})
 @HttpMethodMapping
+@Repeatable(ErrorMappings.class)
 public @interface Error {
 
     /**
